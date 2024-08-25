@@ -1,6 +1,6 @@
 const manList = document.getElementById("man-list")
 
-const littleUrl = "http://www.filltext.com/?rows=1000&id=%7Bnumber%7C1000%7D&firstName=%7BfirstName%7D&delay=3&lastName=%7BlastName%7D&email=%7Bemail%7D&phone=%7Bphone%7C(xxx)xxx-xx-xx%7D&address=%7BaddressObject%7D&description=%7Blorem%7C32%7D"
+const littleUrl = "http://www.filltext.com/?rows=32&id=%7Bnumber%7C1000%7D&firstName=%7BfirstName%7D&lastName=%7BlastName%7D&email=%7Bemail%7D&phone=%7Bphone%7C(xxx)xxx-xx-xx%7D&address=%7BaddressObject%7D&description=%7Blorem%7C32%7D"
 
 // Маленький объем данных : http://www.filltext.com/?rows=32&id=%7Bnumber%7C1000%7D&firstName=%7BfirstName%7D&lastName=%7BlastName%7D&email=%7Bemail%7D&phone=%7Bphone%7C(xxx)xxx-xx-xx%7D&address=%7BaddressObject%7D&description=%7Blorem%7C32%7D
 // Большой объем данных : http://www.filltext.com/?rows=1000&id=%7Bnumber%7C1000%7D&firstName=%7BfirstName%7D&delay=3&lastName=%7BlastName%7D&email=%7Bemail%7D&phone=%7Bphone%7C(xxx)xxx-xx-xx%7D&address=%7BaddressObject%7D&description=%7Blorem%7C32%7D
@@ -18,21 +18,29 @@ const manListEmpty = `
             <th>Zip</th>
             <th>Description</th>
         </tr>` // Пустая таблица для последующей вставки данных
+const loadManList = `
+        <tr class="th-cell">
+            <th><h1>Данные таблицы загружаются</h1></th>
+        </tr>`
+const loadManListError = `
+        <tr class="th-cell">
+            <th><h1 style="color:red">Ошибка загрузки!</h1></th>
+        </tr>`
+let blockfunc = 0
 
-let man = [] // Список данных
+const man = [] // Список данных
 
-function chunkArray (array, chunkSize) { // Разделение списка по 50 (список, кол-во данных в куске)
-    chunkedArray = []
-    for (let i = 0; i < array.length; i += chunkSize) {
-        chunkedArray.push(array.slice(i, i + chunkSize))
-    }
-    return chunkedArray
-}
-let posPagination = 0
-let chunk // Переменная чанк глобальная!
-
-function manListUpdate(posPagination) { // Обновление таблицы html с текущим списком данных
-    man = chunk[posPagination]
+// function chunkArray (array, chunkSize) { // Разделение списка по 50 (список, кол-во данных в куске)
+//     chunkedArray = []
+//     for (let i = 0; i < array.length; i += chunkSize) {
+//         chunkedArray.push(array.slice(i, i + chunkSize))
+//     }
+//     return chunkedArray
+// }
+// let posPagination = 0
+// let chunk
+function manListUpdate() { // Обновление таблицы html с текущим списком данных
+    manList.innerHTML = manListEmpty
     man.forEach(function (person, index) {
         containerHTML = `
         <tr class="line-${index % 2 == 0? 'odd' : 'even'}">
@@ -60,64 +68,36 @@ fetch(littleUrl).then(response => {
 }).then(data => { // Работаем с данными
     man.push(...data)
     man.sort((a, b) => a.id - b.id)
-    chunk = chunkArray(man, 50) // Присваеваем переменной чанк данные, разделённые по 50
-    console.log("Лог из then:", chunk); // ПОТОМ УДАЛИТЬ
-    manListUpdate(posPagination)
+    // let chunk = chunkArray(man, 50)
+    manListUpdate()
 }).catch(error => { // Если ошибка
     console.error("There has been a problem with your fetch operation:", error)
+    manList.innerHTML = loadManListError
+    blockfunc = 1
 })
 
 let sortDirection = document.querySelector(".sort-direction")
 let btnSorting = document.querySelector(".btn-sorting")
 
 function sortDirectionChange () { // Функция сортировки
-    sortDirection.classList.toggle("change")
-    
-    if (sortDirection.classList.contains('change')) {
-        sortDirection.innerHTML = "&uarr;"
-        man.sort((a, b) => b.id - a.id)
-        manList.innerHTML = manListEmpty
-        manListUpdate()
-    } else {
-        sortDirection.innerHTML = "&darr;"
-        man.sort((a, b) => a.id - b.id)
-        manList.innerHTML = manListEmpty
-        manListUpdate()
+    if (blockfunc != 1) {
+        sortDirection.classList.toggle("change")
+        if (sortDirection.classList.contains('change')) {
+            sortDirection.innerHTML = "&uarr;"
+            man.sort((a, b) => b.id - a.id)
+            manList.innerHTML = manListEmpty
+            manListUpdate()
+        } else {
+            sortDirection.innerHTML = "&darr;"
+            man.sort((a, b) => a.id - b.id)
+            manList.innerHTML = manListEmpty
+            manListUpdate()
+        }
     }
 }
 
 btnSorting.addEventListener("click", sortDirectionChange)
 
-const btnPrevPage = document.querySelector(".prev-page")
-const btnNextPage = document.querySelector(".next-page")
-
-function assingGreyColor() {
-    if (chunk.length == 1) {
-        // Присваеваем кнопках серый цвет
-    }
-}
-// assingGreyColor()
-
-function nextPage() {
-    if (posPagination != chunk.length - 1) {
-       posPagination += 1 
-    } else {
-        // Присваеваем кнопке серый цвет
-    }
-    manListUpdate()
-}
-function prevPage() {
-    if (posPagination != 0) {
-        posPagination -= 1
-    } else {
-        // Присваеваем кнопке серый цвет
-    }
-    manListUpdate()
-}
-
-btnNextPage.addEventListener("click", nextPage)
-
-
-// закончили на том, что при нажатии на смену направления таблицы происходит ошибка. 
-
-
+// setTimeout(() => {
+//     console.log('Chunk за пределами then:', chunk);
+// }, 3000);
