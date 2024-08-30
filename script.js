@@ -26,7 +26,7 @@ const loadManListError = `
         <tr class="th-cell">
             <th><h1 style="color:red">Ошибка загрузки!</h1></th>
         </tr>`
-let blockfunc = 0
+let blockFunc = 0
 
 const man = [] // Список данных
 
@@ -73,7 +73,7 @@ fetch(littleUrl).then(response => {
 }).catch(error => { // Если ошибка
     console.error("There has been a problem with your fetch operation:", error)
     manList.innerHTML = loadManListError
-    blockfunc = 1
+    blockFunc = 1
 })
 
 let sortDirection = document.querySelector(".sort-direction")
